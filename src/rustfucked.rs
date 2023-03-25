@@ -85,12 +85,14 @@ fn parse(src : &[u8], start_idx : usize) -> (Vec<Stmt>, usize)
 
 fn execute(code : &[Stmt], state : &mut ProgramState) {
     let mut idx = 0;
+    let modulo = |v, m| { ((v % m) + m) % m };
     while idx < code.len() {
         match &code[idx] {
             Stmt::Move(n) => state.ptr += n,
             Stmt::Add(n)  => {
                 state.tape[state.ptr as usize] += n;
-                state.tape[state.ptr as usize] %= 256;
+                state.tape[state.ptr as usize]  =
+                        modulo(state.tape[state.ptr as usize], 256);
             },
             Stmt::Input   => {
                 let input: i32 = std::io::stdin()
@@ -99,7 +101,7 @@ fn execute(code : &[Stmt], state : &mut ProgramState) {
                     .and_then(|result| result.ok())
                     .map(|byte| byte as i32)
                     .unwrap();
-                state.tape[state.ptr as usize] = input;
+                state.tape[state.ptr as usize] = modulo(input, 256);
             },
             Stmt::Output  => {
                 print!("{}", state.tape[state.ptr as usize] as u8 as char);
