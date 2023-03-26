@@ -7,11 +7,13 @@ use std::io::Read;
 use std::io::BufReader;
 use std::fs::File;
 
+mod llvm_ir_generator;
+
 const USAGE_STR : &str = "Usage: ./rustfuck <file>";
 const TAPE_SIZE : usize = 65536;
 
 #[derive(PartialEq, Eq, Debug)]
-enum Stmt 
+pub enum Stmt 
 {
     Move(i32),
     Add(i32),
@@ -127,9 +129,10 @@ fn main() -> io::Result<()>
     }
 
     /* read brainfuck file */
-    let f = File::open(&args[1])?;
+    let filepath = &args[1];
+    let file = File::open(filepath)?;
     let mut src = Vec::<u8>::new();
-    BufReader::new(f).read_to_end(&mut src)?;
+    BufReader::new(file).read_to_end(&mut src)?;
 
     /* Parse into brainfuck program representation */
     let (program, _) = parse(&src, 0);
@@ -137,12 +140,19 @@ fn main() -> io::Result<()>
     /* Debug print program */
     //println!("{:?}", program);
 
-    /* Execute program */
-    let mut state = ProgramState {
-        ptr: 0,
-        tape: [0; TAPE_SIZE]
-    };
-    execute(&program, &mut state);
+    /* Execute program in interpreter */
+    //let mut state = ProgramState {
+    //    ptr: 0,
+    //    tape: [0; TAPE_SIZE]
+    //};
+    //execute(&program, &mut state);
+
+    /* Code generation */
+    let outfile = filepath
+            .split('/').last().unwrap() // strip path
+            .split('.').nth(0).unwrap() // strip extension
+            .to_owned() + ".ll";        // append llvm ir extension
+    llvm_ir_generator::code_gen(&program, &outfile);
 
     Ok(())
 }
