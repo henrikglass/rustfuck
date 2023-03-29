@@ -86,7 +86,7 @@ fn write_loop_begin(ir : &mut String, context : &mut CodeGenContext) -> u32
     return context.loopc - 1;
 }
 
-fn write_loop_end(ir : &mut String, context : &mut CodeGenContext, loop_num : u32)
+fn write_loop_end(ir : &mut String, loop_num : u32)
 {
     write!(ir, "  br label %loop_cond{}\n", loop_num).unwrap();
     write!(ir, "loop_end{}:\n\n", loop_num).unwrap();
@@ -103,13 +103,13 @@ fn write_code(ir : &mut String, code : &[Stmt], context : &mut CodeGenContext)
             Stmt::Loop(loop_code) => {
                 let loop_num = write_loop_begin(ir, context);
                 write_code(ir, loop_code, context);
-                write_loop_end(ir, context, loop_num);
+                write_loop_end(ir, loop_num);
             }
         }
     }
 }
 
-pub fn code_gen(code : &[Stmt], outfile : &String)
+pub fn code_gen(code : &[Stmt]) -> String
 {
     let mut ir : String = String::new();
 
@@ -122,5 +122,6 @@ pub fn code_gen(code : &[Stmt], outfile : &String)
     write_code(&mut ir, code, &mut context);
     write_footer(&mut ir);
 
-    println!("{}", ir);
+    //println!("{}", ir);
+    return ir;
 }
